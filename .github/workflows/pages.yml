@@ -1,0 +1,29 @@
+name: Website
+
+# https://outglow.github.io/: the site of outglow/outglow (site/), built with
+# the base / by its reusable workflow and deployed here. Runs when this
+# repository changes, by hand, and every hour, so that changes of the site in
+# outglow/outglow and new releases show up here too.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+  schedule:
+    - cron: "17 * * * *"
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  site:
+    uses: outglow/outglow/.github/workflows/site.yml@main
+    with:
+      base: /
+      ref: main
