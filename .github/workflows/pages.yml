@@ -1,16 +1,15 @@
 name: Website
 
 # https://outglow.github.io/: the site of outglow/outglow (site/), built with
-# the base / by its reusable workflow and deployed here. Runs when this
-# repository changes, by hand, and every hour, so that changes of the site in
-# outglow/outglow and new releases show up here too.
+# the base / by its reusable workflow and deployed here. outglow/outglow's
+# website workflow writes the commit to build to SOURCE and pushes it (its
+# job `root`, with this repository's deploy key), which starts this run; by
+# hand it builds the commit in SOURCE, or main without one.
 
 on:
   push:
     branches: [main]
   workflow_dispatch:
-  schedule:
-    - cron: "17 * * * *"
 
 permissions:
   contents: read
@@ -22,8 +21,18 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  source:
+    runs-on: ubuntu-latest
+    outputs:
+      ref: ${{ steps.ref.outputs.ref }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: ref
+        run: echo "ref=$(cat SOURCE 2>/dev/null || echo main)" >> "$GITHUB_OUTPUT"
+
   site:
+    needs: source
     uses: outglow/outglow/.github/workflows/site.yml@main
     with:
       base: /
-      ref: main
+      ref: ${{ needs.source.outputs.ref }}
